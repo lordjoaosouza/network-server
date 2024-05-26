@@ -12,7 +12,7 @@ services:
     container_name: pi-hole
     image: pihole/pihole:latest
     environment:
-      TZ: "<time-zone>" # change to your time zome
+      TZ: "<time-zone>" # change to your time zone
       IPv6: false
       WEB_PORT: 8080
       PIHOLE_DNS_: "127.0.0.1#5053"
