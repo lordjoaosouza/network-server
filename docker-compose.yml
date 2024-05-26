@@ -1,0 +1,50 @@
+version: "3"
+services:
+  watchtower:
+    image: containrrr/watchtower:latest
+    container_name: watchtower
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    command: --schedule "0 0 */6 * * *"
+    restart: always
+
+  pi-hole:
+    container_name: pi-hole
+    image: pihole/pihole:latest
+    environment:
+      TZ: "<time-zone>" # change to your time zome
+      IPv6: false
+      WEB_PORT: 8080
+      PIHOLE_DNS_: "127.0.0.1#5053"
+      INTERFACE: "<interface>" # change to your interface
+    volumes:
+      - "$HOME/dockerapps/pi-hole/etc-pihole:/etc/pihole"
+      - "$HOME/dockerapps/pi-hole/etc-dnsmasq.d:/etc/dnsmasq.d"
+    cap_add:
+      - NET_ADMIN
+    restart: unless-stopped
+    network_mode: host
+
+  cloudflared:
+    container_name: cloudflared
+    image: cloudflare/cloudflared:latest
+    command: proxy-dns
+    environment:
+      TUNNEL_DNS_UPSTREAM: "https://1.1.1.1/dns-query,https://1.0.0.1/dns-query"
+      TUNNEL_DNS_PORT: 5053
+      TUNNEL_DNS_ADDRESS: "0.0.0.0"
+    restart: unless-stopped
+    network_mode: host
+
+  caddy:
+    image: lordjoaosouza/caddy-cloudflare:latest
+    container_name: caddy
+    volumes:
+      - "$HOME/dockerapps/caddy/Caddyfile:/etc/caddy/Caddyfile"
+      - "$HOME/dockerapps/caddy/srv:/srv"
+      - "$HOME/dockerapps/caddy/data:/data"
+      - "$HOME/dockerapps/caddy/config:/config"
+    cap_add:
+      - NET_ADMIN
+    restart: unless-stopped
+    network_mode: host
